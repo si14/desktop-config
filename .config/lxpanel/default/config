@@ -1,0 +1,5 @@
+[General]
+KioskMode=false
+[Command]
+FileManager=pcmanfm %s
+Terminal=lxterminal
