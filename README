@@ -1,1 +1,17 @@
-My Desktop configuration. Constists of Openbox and XMonad. xinitrc included.
+My Desktop configuration.
+Arch Linux + Openbox & XMonad.
+Just copy contents from this repo to your home folder.
+
+<b>Enjoy!</b>
+
+Packages:
+- openbox 3.5.0-3
+- openbox-themes 1.0.2-1
+- openbox-elementary-theme (from AUR)
+- xfce4-panel 4.8.5-1
+- other stuff for openbox: feh, cairo-compmgr, volumeicon, docky 
+
+- xmonad-darcs (from AUR)
+- xmonad-contrib-darcs (from AUR)
+- xmobar 0.13-2
+- other stuff for xmonad: feh, volumeicon, trayer
