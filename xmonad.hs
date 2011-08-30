@@ -1,5 +1,6 @@
 -- Imports.
 import qualified Data.Map as Map
+import qualified Data.Tuple as Tuple
 import System.IO
 
 import XMonad
@@ -11,7 +12,8 @@ import XMonad.Hooks.EwmhDesktops
 import XMonad.Actions.CycleWindows
 import XMonad.Actions.CycleWS
 import XMonad.Actions.WindowNavigation
-import XMonad.Actions.DwmPromote
+import XMonad.Actions.Promote
+import XMonad.Actions.WindowGo
 
 import XMonad.Util.Run(spawnPipe)
 import XMonad.Util.EZConfig
@@ -83,7 +85,7 @@ myWinNavKeys =
     ((modm .|. shiftMask, xK_Right), WNSwap R) ]
 
 myKeys = [("M-M1-b", spawn "google-chrome"),
-          ("M-M1-f", spawn "thunar"),
+          --("M-M1-f", spawn "thunar"),
 
           --("C-M1-l", spawn "slock"),
 
@@ -94,6 +96,16 @@ myKeys = [("M-M1-b", spawn "google-chrome"),
           ("C-M-S-<Left>",   shiftPrevScreen),
           ("C-M-S-<Right>",  shiftNextScreen),
 
-          ("M-<Return>", dwmpromote),
+          ("M-<Return>", promote),
 
-          ("M-x", shellPrompt promptConfig)]
+          ("M-x", shellPrompt promptConfig)] ++
+         myApps
+
+myApps = appShortcuts[("b", "firefox", "Firefox"),
+                      ("f", "thunar", "Thunar")]
+
+appShortcuts = concat . map appShortcut
+
+appShortcut (key, app, name) =
+    [("M-M1-"   ++ key, runOrRaise app (className =? name)),
+     ("M-S-M1-" ++ key, spawn app)]
