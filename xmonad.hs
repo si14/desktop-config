@@ -5,8 +5,11 @@ import System.IO
 
 import XMonad
 
+import XMonad.Config.Gnome
+
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
+import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.EwmhDesktops
 
 import XMonad.Actions.CycleWindows
@@ -18,29 +21,36 @@ import XMonad.Actions.WindowGo
 import XMonad.Util.Run(spawnPipe)
 import XMonad.Util.EZConfig
 import XMonad.Util.Themes
+import XMonad.Util.NamedScratchpad
 
 import XMonad.Layout.DwmStyle
+import XMonad.Layout.NoBorders
+import XMonad.Layout.ShowWName
+import XMonad.Layout.ResizableTile
+import XMonad.Layout.Reflect
+import XMonad.Layout.Grid
 
 import XMonad.Prompt
 import XMonad.Prompt.Shell
+import XMonad.Prompt.Ssh
 
 import qualified XMonad.StackSet as W
 
 modm = mod4Mask
+baseConfig = gnomeConfig
+myTerminal = "sakura"
 
 -- The main function.
 main = do
-	xmproc <- spawnPipe "xmobar /home/si14/.xmobarrc"
         config <- withWindowNavigationKeys myWinNavKeys
-                  $ defaultConfig { modMask = mod4Mask,
-                                    terminal = "sakura",
-                                    focusFollowsMouse = False,
-                                    focusedBorderColor = "yellow",
-                                    layoutHook = myLayoutHook,
-                                    manageHook = myManageHook,
-                                    workspaces = myWorkspaces,
-                                    logHook = myLogHook xmproc
-                                  }
+                  $ baseConfig { modMask = mod4Mask,
+                                 terminal = myTerminal,
+                                 focusFollowsMouse = False,
+                                 focusedBorderColor = "yellow",
+                                 layoutHook = myLayoutHook,
+                                 manageHook = myManageHook,
+                                 workspaces = myWorkspaces
+                                }
                   `additionalKeysP` myKeys
         xmonad config
 
@@ -52,27 +62,23 @@ promptConfig = defaultXPConfig {
 myWorkspaces = ["im", "web", "dev", "files", "other"]
 
 myManageHook = manageDocks
-             <+> composeAll []
-             <+> manageHook defaultConfig
-
---myManageHook = composeAll  []
-	--[
-	--className =? "Chromium"       --> doF (W.shift (myWorkspaces !! 1)),
-	--className =? "Geany"          --> doF (W.shift (myWorkspaces !! 2)),
-	--]
+             <+> composeAll [
+               isFullscreen --> doFullFloat
+             ]
+             <+> namedScratchpadManageHook myScratchpads
+             <+> manageHook baseConfig
 
 myDWConfig = (theme smallClean) { fontName   = "xft:Ubuntu:size=8",
                                   decoHeight = 16 }
 
-myLayoutHook = avoidStruts
+myLayoutHook = smartBorders
+               $ showWName' defaultSWNConfig { swn_font = "xft:Ubuntu:size=20" }
+               $ avoidStruts
                $ dwmStyle shrinkText myDWConfig
-               $ layoutHook defaultConfig
+               $ tiled ||| reflectTiled ||| Mirror tiled ||| Grid ||| Full
 
-myLogHook = \xmobarProc ->
-  dynamicLogWithPP xmobarPP {
-    ppOutput = hPutStrLn xmobarProc,
-    ppTitle = xmobarColor "#eee" "" . shorten 120
-    }
+tiled = ResizableTall 1 (2/100) (1/2) []
+reflectTiled = (reflectHoriz tiled)
 
 myWinNavKeys =
   [ ((modm              , xK_Up),    WNGo   U),
@@ -84,10 +90,7 @@ myWinNavKeys =
     ((modm .|. shiftMask, xK_Down),  WNSwap D),
     ((modm .|. shiftMask, xK_Right), WNSwap R) ]
 
-myKeys = [("M-M1-b", spawn "google-chrome"),
-          --("M-M1-f", spawn "thunar"),
-
-          --("C-M1-l", spawn "slock"),
+myKeys = [--("C-M1-l", spawn "slock"),
 
           ("C-M1-<Right>",   nextWS),
           ("C-M1-<Left>",    prevWS),
@@ -97,12 +100,21 @@ myKeys = [("M-M1-b", spawn "google-chrome"),
           ("C-M-S-<Right>",  shiftNextScreen),
 
           ("M-<Return>", promote),
+          ("M-j", sendMessage MirrorShrink),
+          ("M-k", sendMessage MirrorExpand),
 
-          ("M-x", shellPrompt promptConfig)] ++
+          ("M-x", shellPrompt promptConfig),
+          ("M-S-x", sshPrompt promptConfig),
+
+          ("M-z", namedScratchpadAction myScratchpads "urxvt")] ++
          myApps
 
-myApps = appShortcuts[("b", "firefox", "Firefox"),
-                      ("f", "thunar", "Thunar")]
+myApps = appShortcuts[("b", "google-chrome", "Google-chrome"),
+                      ("f", "nautilus", "Nautilus")]
+
+myScratchpads = [NS "urxvt" "urxvt -title urxvt_scratch " (title =? "urxvt_scratch") defaultFloating]
+
+--utility functions
 
 appShortcuts = concat . map appShortcut
 
